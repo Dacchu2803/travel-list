@@ -24,7 +24,7 @@ export default function App() {
     <Logo />
     <Form onAddItems={handleAddItems}/>
     <PackingList items={items} onDeleteItems={handleDeleteItems} onToggleItems={handleToggleItems}/>
-    <Stats />
+    <Stats items={items}/>
     </div>
   );
 }
@@ -63,10 +63,27 @@ function Form({onAddItems}){
 }
 
 function PackingList({items , onDeleteItems, onToggleItems}){
+  const [sortBy,setSortBy] = useState("input");
+
+  let sortedItems;
+
+  if(sortBy==="input") sortedItems = items;
+
+  if(sortBy==='description') sortedItems = items.slice().sort((a,b)=>a.description.localeCompare(b.description));
+
+  if(sortBy==='packed') sortedItems = items.slice().sort((a,b)=>Number(a.packed)-Number(b.packed));
+
   return <div className='list'>
     <ul>
-      {items.map(item => <Item item={item} onDeleteItems={onDeleteItems} onToggleItems={onToggleItems}/>)}
+      {sortedItems.map(item => <Item item={item} onDeleteItems={onDeleteItems} onToggleItems={onToggleItems}/>)}
     </ul>
+    <div className="actions">
+      <select value={sortBy} onChange={(e)=>setSortBy(e.target.value)}>
+        <option value='input'>Sort by input order</option>
+        <option value="description">Sort by description</option>
+        <option value="packed">Sort by pakced status</option>
+      </select>
+    </div>
   </div>
 
 }
@@ -81,10 +98,15 @@ function Item({item, onDeleteItems, onToggleItems}){
   </li>
 }
 
-function Stats(){
+function Stats({items}){
+  if(!items.length) return <p className="stats"><em>Start adding some items to your packing list</em></p>
+  const numItems = items.length;
+  const numPacked = items.filter(item=>item.packed).length;
+  const percentage = Math.round((numPacked/numItems)*100);
   return (
     <footer className="stats">
-      <em> You have X items on your list, and you already packed X (X%)</em>
+      <em> {percentage===100?'You got everything! Ready to go':
+        `You have ${numItems} items on your list, and you already packed ${numPacked} (${percentage}%)`}</em>
     </footer>
   )
 }
